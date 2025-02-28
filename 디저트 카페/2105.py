@@ -20,7 +20,7 @@ sys.stdin = open("sample_input.txt")
 """
 
 
-def dfs(start, cur_loc, rotation, direction, turn, numbers, cnt):
+def dfs(start, cur_loc, rotation, direction, turn, numbers, cnt, path):
     global result
     global N
     global dead_end
@@ -35,30 +35,38 @@ def dfs(start, cur_loc, rotation, direction, turn, numbers, cnt):
         di = [1, -1, -1, 1]
         dj = [1, 1, -1, -1]
 
-    if turn == 4:
-        if cur_loc == start:
-            if cnt > result:
-                result = cnt
+
+    if cur_loc == start and cnt > 3:
+        if cnt > result:
+            result = cnt
+            return
+
+    else:
+        k = direction % 4
+        for _ in range(2):
+            next_loc = (cur_loc[0] + di[k], cur_loc[1] + dj[k])
+
+            if 0 <= next_loc[0] < N and 0 <= next_loc[1] < N and\
+                    next_loc not in dead_end and matrix[next_loc[0]][next_loc[1]] not in numbers:
+                numbers.add(matrix[next_loc[0]][next_loc[1]])
+                path.add(next_loc)
+                dfs(start, next_loc, rotation, k, turn, numbers, cnt + 1, path)
+                numbers.remove(matrix[next_loc[0]][next_loc[1]])
+                path.remove(next_loc)
+
+            elif next_loc == start:
+                dfs(start, next_loc, rotation, k, turn, numbers, cnt+1, path)
+
+            elif next_loc in path:
+                return
+
+            if turn < 3:
+                k = (k + 1)%4
+                turn += 1
+            else:
+                break
+
         return
-
-    k = direction // 4
-
-    for _ in range(2):
-        next_loc = (cur_loc[0] + di[k], cur_loc[1] + dj[k])
-
-        if 0 <= next_loc[0] < N and 0 <= next_loc[1] < N and\
-                next_loc not in dead_end and matrix[next_loc[0]][next_loc[1]] not in numbers:
-            numbers.add(matrix[next_loc[0]][next_loc[1]])
-            dfs(start, next_loc, rotation, k, turn, numbers, cnt + 1)
-            numbers.remove(matrix[next_loc[0]][next_loc[1]])
-
-        else:
-            continue
-
-        k = (k + 1)//4
-        turn += 1
-
-    return
 
 
 T = int(input())
@@ -81,6 +89,6 @@ for t in range(1, T+1):
             else:
                 for m in range(2):
                     for n in range(4):
-                        dfs((i, j), (i, j), m, n, 0, {matrix[i][j]}, 1)
+                        dfs((i, j), (i, j), m, n, 0, {matrix[i][j]}, 0, set())
 
     print(f"#{t} {result}")
