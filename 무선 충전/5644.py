@@ -8,15 +8,16 @@ def dfs(loc_a, loc_b, step, charge):
     global M
     delta = [[0, 0], [-1, 0], [0, 1], [1, 0], [0, -1]]
 
+    # 해당 위치에서 이용 가능한 무선 충전기 번호
     charge_a = field[loc_a[0]][loc_a[1]]
-    charge_b = field[loc_a[0]][loc_a[1]]
+    charge_b = field[loc_b[0]][loc_b[1]]
 
     # A와 B가 같은 무선 충전 구역에 없는 경우
     if charge_a & charge_b == set():
         if len(charge_a) > 0:
             max_a = 0
             for a in charge_a:
-                if max_a < chargers[a][3]:
+                if max_a < chargers[a][3]:     # 각 사용자가 이용 가능한 최대 충전량 구하기
                     max_a = chargers[a][3]
             charge += max_a
 
@@ -31,7 +32,7 @@ def dfs(loc_a, loc_b, step, charge):
     else:
         max_c = 0
         for a in charge_a:
-            for b in charge_b:
+            for b in charge_b:                # 모든 조합 시도해보기
                 if a == b:
                     c = chargers[a][3]
                 else:
@@ -44,10 +45,10 @@ def dfs(loc_a, loc_b, step, charge):
     # 경로가 아직 끝나지 않았을 때 탐색 계속
     if step < M:
         next_a = [loc_a[0] + delta[route_a[step]][0], loc_a[1] + delta[route_a[step]][1]]
-        next_b = [loc_b[0] + delta[route_b[step]][0], loc_a[1] + delta[route_b[step]][1]]
+        next_b = [loc_b[0] + delta[route_b[step]][0], loc_b[1] + delta[route_b[step]][1]]
         return dfs(next_a, next_b, step+1, charge)
 
-    # 모든 경로를 완주하면 지금까지의 충전량의 합 반환
+    # 경로 탐색이 끝나면 지금까지의 충전량 반환
     else:
         return charge
 
@@ -60,7 +61,7 @@ for t in range(1, T+1):
     chargers = [list(map(int, input().split())) for _ in range(A)]
 
 
-    # 10*10 배열 준비
+    # 10*10 공집합이 들어있는 배열 준비
     field = []
     for _ in range(10):
         input_list = []
