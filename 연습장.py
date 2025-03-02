@@ -1,8 +1,6 @@
-A = [1, 2, 3, 4, 5]
+A = (2, 3)
+print(A[0])
+print(A[1])
 
-A.sort(reverse = 1)
-print(A)
-
-temp = A.pop()
-A.insert(0, temp)
-print(A)
+B = (A[0] - 2, A[1] + 2)
+print(B)
