@@ -45,8 +45,9 @@ def bricks_left(number, bricks):
     global W
     global H
     global result
+    check = 0
 
-    if number == 0:                    # 구슬을 모두 쐈다면 남아있는 벽돌의 수 세서 최솟값 갱신
+    if number == 0:                    # 구슬을 모두 쐈다면 남아있는 벽돌의 수 세서 최소값 갱신
         cnt = 0
         for i in range(W):
             for j in range(H):
@@ -63,8 +64,9 @@ def bricks_left(number, bricks):
                 if idx == H:
                     break
 
-            if idx == H:                          # 해당 행에 벽돌이 없으면 다음 구슬 쏘기
-                bricks_left(number - 1, bricks)
+            if idx == H:                          # 해당 행에 벽돌이 없으면 다음 행 탐색
+                check += 1
+                continue
 
             else:
                 new_bricks = deepcopy(bricks)
@@ -86,6 +88,9 @@ def bricks_left(number, bricks):
 
                 bricks_left(number - 1, new_bricks)        # 다음 구슬 쏘기
 
+        if check == W:        # 만약 모든 행에 구슬이 없으면 모든 벽돌 깨기 완료
+            result = 0
+            return
 
 T = int(input())
 for t in range(1, T+1):
