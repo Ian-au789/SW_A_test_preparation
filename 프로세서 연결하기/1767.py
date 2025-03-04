@@ -19,13 +19,16 @@ def connect_line(cores, success, length, field):
     global connected
     global lines
 
+    # 모든 프로세서 탐색 종료 시
     if size == 0:
-        if success == connected:
-            if length < lines:
-                lines = length
-        elif connected < success:
-            connected = success
+        if success == connected:                 # 연결한 프로세서 개수가 동일하면
+            lines = min(length, lines)           # 전선 최소 길이 갱신
+        elif connected < success:                # 연결한 프로세서 개수가 늘었으면
+            connected = success                  # 모든 값 갱신
             lines = length
+        return
+
+    if size + success < connected:               # 백트래킹 (남은 프로세서 개수를 다 연결해도 현재 최댓값에 못 미치면 탐색 의미 없음)
         return
 
     global N
@@ -38,7 +41,7 @@ def connect_line(cores, success, length, field):
     cj = core[1][1]
 
     temp = cores.pop()
-    connect_line(cores, success, length, field)
+    connect_line(cores, success, length, field)   # 해당 프로세서를 연결않는 경우
     cores.append(temp)
 
     for k in range(4):
@@ -46,9 +49,11 @@ def connect_line(cores, success, length, field):
         block = 0
         ni = ci + di[k]
         nj = cj + dj[k]
+
+        # 4가지 방향으로 테두리에 연결 가능한지 탐색
         while ni in range(N) and nj in range(N):
             if matrix[ni][nj] > 0:
-                block = 1
+                block = 1                        # 막혀 있으면 표시
                 break
 
             else:
@@ -57,15 +62,15 @@ def connect_line(cores, success, length, field):
             ni += di[k]
             nj += dj[k]
 
-        if block == 0:
+        if block == 0:                           # 막혀 있지 않으면 해당 경로에 전선 표시
             cnt = 0
             for loc in line:
                 field[loc[0]][loc[1]] = number
                 cnt += 1
 
-            temp = cores.pop()
-            connect_line(cores, success + 1, length + cnt, field)
-            cores.append(temp)
+            temp = cores.pop()                   # 탐색 완료한 프로세서 제거
+            connect_line(cores, success + 1, length + cnt, field)           # 다음 프로세서 탐색
+            cores.append(temp)                   # 해당 경로 탐색 이전으로 초기화
 
             for loc in line:
                 field[loc[0]][loc[1]] = 0
@@ -95,4 +100,4 @@ for t in range(1, T+1):
 
     connect_line(check_list, 0, 0, matrix)
 
-    print(f"#{t} {connected} {lines}")
+    print(f"#{t} {lines}")
