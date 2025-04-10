@@ -63,7 +63,7 @@ def trial(i, j, k, size, matrix, large):
 
             if matrix[ni][nj][0] == matrix[i][j][0] and not matrix[ni][nj][1]:
                 new_block = matrix[i][j][0] * 2
-                if new_block > large:
+                if new_block > large:                    # 가장 큰 블록이 합쳐졌으면 더 이상 큰 수는 나올 수 없음
                     return 0
                 matrix[ni][nj] = (new_block, 1)
                 matrix[i][j] = 0
