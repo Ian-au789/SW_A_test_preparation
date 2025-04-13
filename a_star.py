@@ -1,74 +1,103 @@
-from typing import List, Tuple, Callable
-import math
+from typing import List, Tuple, Dict
 import heapq
 
-# 방향 벡터
+Coord = Tuple[int, int]
+
 d_row = (-1, 0, 1, 0)
 d_col = (0, 1, 0, -1)
 
-def a_star(
-    matrix: List[List[int]], start: Coord, dest: Coord
-) -> Tuple[int, List[Coord]]:
-    global d_row
-    global d_col
+def get_manhattan_distance(a: Coord, b: Coord) -> int:
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    h = len(matrix)
-    w = len(matrix[0])
+def is_valid(matrix: List[List[int]], vis: List[List[bool]], y: int, x: int) -> bool:
+    return (
+        0 <= y < len(matrix) and
+        0 <= x < len(matrix[0]) and
+        not vis[y][x] and
+        matrix[y][x] == 0
+    )
 
-    # 휴리스틱 코스트 테이블
-    heuristic_cost = [[float("inf")] * w for _ in range(h)]
+def a_star(matrix: List[List[int]], start: Coord, dest: Coord) -> Tuple[int, List[Coord], List[List[bool]], List[List[int]]]:
+    h, w = len(matrix), len(matrix[0])
 
-    # 휴리스틱 코스트 구하기
+    heuristic_cost = [[float('inf')] * w for _ in range(h)]
     for i in range(h):
         for j in range(w):
-            if matrix[i][j]:
-                heuristic_cost[i][j] = round(get_euclidean_distance((i, j), dest))
+            if matrix[i][j] == 0:
+                heuristic_cost[i][j] = get_manhattan_distance((i, j), dest)
 
     row, col = start
     dest_y, dest_x = dest
 
     vis = [[False] * w for _ in range(h)]
+    came_from: Dict[Coord, Coord] = {}
 
     heap = []
-    heapq.heappush(heap, (heuristic_cost[row][col] + 0, row, col))
+    heapq.heappush(heap, (heuristic_cost[row][col], row, col))
 
-    total_cost = 0
-    # 어떤 노드에서 어떤 노드로 이동하는지 저장할 리스트
-    came_from = []
+    while heap:
+        current_cost, row, col = heapq.heappop(heap)
 
-    """
-    heap이 비거나 목적 지점에 도착할 때까지 반복:
-        heap에서 cost가 최소인 값을 꺼내서 방문처리를 한 후,
-        유효한 인접 노드가 있으면 코스트를 계산해 힙에 넣는다.
-    """
-    while heap and (row, col) != (dest_y, dest_x):
-        total_cost, row, col = heapq.heappop(heap)
+        if (row, col) == (dest_y, dest_x):
+            break
 
-        # Total Cost 에서 휴리스틱 코스트를 빼면 시작 지점에서 현재 지점까지의 실제 거리를 구할 수 있음
-        depth = total_cost - heuristic_cost[row][col]
+        if vis[row][col]:
+            continue
 
-        # 방문 처리
         vis[row][col] = True
+        g = current_cost - heuristic_cost[row][col]
 
-        # 유효한 인접 노드가 있으면 코스트를 계산해 힙에 넣는다.
         for i in range(4):
-            adjy = row + d_row[i]
-            adjx = col + d_col[i]
-            if is_vaild(matrix, vis, adjy, adjx):
-                total_cost = heuristic_cost[adjy][adjx] + depth + 1
-                came_from.append(((row, col), (adjy, adjx)))
-                heapq.heappush(heap, (total_cost, adjy, adjx))
+            adjy, adjx = row + d_row[i], col + d_col[i]
+            if is_valid(matrix, vis, adjy, adjx):
+                new_cost = g + 1 + heuristic_cost[adjy][adjx]
+                heapq.heappush(heap, (new_cost, adjy, adjx))
+                came_from[(adjy, adjx)] = (row, col)
 
-    # came_from을 역순으로 추적하여 최단 경로를 찾음
-    from_y, from_x = came_from[-1][0]
-    paths = []
+    # 경로 복원
+    path = []
+    current = dest
+    while current in came_from:
+        path.insert(0, current)
+        current = came_from[current]
+    if path:
+        path.insert(0, start)
 
-    for i in range(len(came_from) - 1, -1, -1):
-        from_coord, to_coord = came_from[i]
-        to_y, to_x = to_coord
+    total_cost = len(path) - 1
+    return total_cost, path, vis, heuristic_cost
 
-        if from_y == to_y and from_x == to_x:
-            from_y, from_x = from_coord
-            paths.insert(0, to_coord)
+# ----------------------
+# ✅ 테스트 실행 예제
+# ----------------------
+if __name__ == "__main__":
+    # 0 = 이동 가능, 1 = 장애물
+    test_map = [
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 0, 1, 0],
+        [1, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+    ]
 
-    return total_cost, paths, vis, heuristic_cost
+    start = (0, 0)
+    dest = (4, 4)
+
+    total_cost, path, vis, heuristics = a_star(test_map, start, dest)
+
+    print(f"최단 거리: {total_cost}")
+    print(f"경로: {path}")
+    print("맵 위에 경로 표시:")
+    for i in range(len(test_map)):
+        row = ""
+        for j in range(len(test_map[0])):
+            if (i, j) == start:
+                row += "S "
+            elif (i, j) == dest:
+                row += "D "
+            elif (i, j) in path:
+                row += "* "
+            elif test_map[i][j] == 1:
+                row += "# "
+            else:
+                row += ". "
+        print(row)
